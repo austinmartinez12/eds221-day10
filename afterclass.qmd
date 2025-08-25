@@ -1,0 +1,71 @@
+---
+title: "DATA WRANGLE"
+format: html
+editor: visual
+---
+
+```{r}
+library(dplyr)
+library(here)
+library(tidyverse)
+```
+
+```{r}
+ice_data <- read_csv(here("data", "ntl20_v6.csv"), na = "-999")
+meteor_data <- read_csv(here("data", "ntl33_v7.csv"), na = "-999")
+```
+
+```{r}
+ggplot(data = meteor_data, aes(x= lakeid, y= ice_duration)) +
+  geom_boxplot() +
+  labs(title = "Ice Duration Across Different Lakes", y = "Ice Duration")
+```
+
+```{r}
+ annual_ice <- meteor_data %>%
+  drop_na(ice_duration) %>%
+  group_by(year4) %>%
+  summarise(mean_ice = mean(ice_duration, na.rm = TRUE))
+```
+
+```{r}
+ggplot(data = annual_ice, aes(x= year4, y= mean_ice)) +
+  geom_smooth() +
+  labs(title = "Ice Duration Across Different Years", y = "Average Ice Duration")
+```
+## This graph shows that avereage ice duration has been dropping every year.
+
+```{r}
+ mean_air <- ice_data %>%
+  filter(month == c("12", "1", "2")) %>%
+  group_by(year4) %>%
+  summarise(mean_air = mean(ave_air_temp_adjusted, na.rm = TRUE))
+
+```
+
+```{r}
+ggplot(data = mean_air, aes(x = year4, y = mean_air)) +
+  geom_smooth()
+```
+
+```{r}
+ice.air_year <- left_join(annual_ice, mean_air, by = "year4")
+```
+
+```{r}
+ggplot(data = ice.air_year, aes(x = mean_ice, y = mean_air)) +
+  geom_point()
+```
+
+```{r}
+thaw_1970 <- meteor_data %>%
+  filter(year4 >= 1970) %>%
+  mutate(last_data = lubridate::yday(lubridate::ymd(ice_off)))
+```
+
+```{r}
+ggplot(data = thaw_1970, aes(x = year4, y = last_data)) +
+  geom_line()
+```
+
+
